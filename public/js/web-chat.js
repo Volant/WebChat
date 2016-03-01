@@ -29,13 +29,12 @@
         },
         
         addUser: function(roomName, name) {
-            var room = this.roomList.filter(function (room) {
-                if (room.name === roomName) {
-                    return true;
-                }
+            var room = this.roomList.find(function (room) {
+                return room.name === roomName;
             });
-            if (room.length) {
-                room[0].userList.push(name);
+            
+            if (room) {
+                room.userList.push(name);
             }
         },
         
