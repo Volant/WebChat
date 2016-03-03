@@ -1,6 +1,6 @@
-var webChat = angular.module('webChat', ['ngRoute']);
+var webChatApp = angular.module('webChatApp', ['ngRoute']);
 
-webChat.config(function($routeProvider) {
+webChatApp.config(function($routeProvider) {
     $routeProvider
     .when('/', {
         templateUrl : 'pages/index.html',
@@ -12,7 +12,7 @@ webChat.config(function($routeProvider) {
     });
 });
 
-webChat.service('remote', function() {
+webChatApp.service('remote', function() {
     var remote = undefined;
     
     var setRemote = function(nick) {
@@ -29,10 +29,9 @@ webChat.service('remote', function() {
     };
 });
 
-webChat.controller('indexController', ['$scope', '$location', 'remote',
+webChatApp.controller('indexController', ['$scope', '$location', 'remote',
     function ($scope, $location, remote) {
-        $scope.message = "This is an index page";
-
+        remote.setRemote('V');
         if (remote.getRemote() === undefined) {
             $location.path("/");
         }
@@ -44,16 +43,18 @@ webChat.controller('indexController', ['$scope', '$location', 'remote',
     }
 ]);
 
-webChat.controller('chatController', [ '$scope', 'remote',
+webChatApp.controller('chatController', [ '$scope', 'remote',
     function ($scope, remote) {
         
-        console.log(remote.getRemote());
+        $scope.messagesList = [];
         
-        $scope.wc = WC(remote.getRemote());
-    
-        console.log($scope.wc);
+        $scope.wc = new WC(remote.getRemote());
         
-        $scope.message = "Draft chat page for " + $scope.wc.getRemote();
+        $scope.sendMessage = function() {
+            this.wc.sendMessage(this.message);
+            this.message = '';
+            this.messagesList = this.wc.getMessagesList();
+        }
     }
 ]);
 

@@ -1,3 +1,25 @@
-This is a chat page
-
-{{message}}
+<div class="container" style="max-width: 800px; margin: 0 auto 10px;">
+    <div class="row">
+        <div class="col-xs-3">
+            <div class="list-group">
+                <a href="#" class="list-group-item ">Room 1 <span class="badge">14</span></a>
+                <a href="#" class="list-group-item ">Room 2</a>
+                <a href="#" class="list-group-item ">Room 3</a>
+                <a href="#" class="list-group-item ">Room 4</a>
+            </div>
+        </div>
+        <div class="col-xs-8">
+            <div class="list-group">
+                <a href="#" class="list-group-item" ng-repeat="message in messagesList">
+                    {{message.text}}
+                </a>
+            </div>
+            <form>
+                <div class="form-group">
+                    <textarea class="form-control" rows="3" ng-model="message"></textarea>
+                </div>
+                <div class="pull-right"><button type="submit" class="btn btn-success" ng-click="sendMessage()">Submit</button></div>
+            </form>
+        </div>
+    </div>
+</div>

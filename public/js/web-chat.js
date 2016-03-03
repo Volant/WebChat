@@ -2,10 +2,21 @@
     
     'use strict';
     
-    var webChat = function(remote) {
-        var wc = new webChat.init(remote);
-        wc.newRoom(wc.getDefaultRoomName());
-        return wc;
+    var WebSocketsServer = "localhost";
+    var RoomDefaultName  = "Self";
+    
+    function webChat(remote) {
+
+        var self = this;
+
+        self.version = '0.1';
+        
+        self.currentRoomName = RoomDefaultName;
+        self.roomList = [];
+        
+        self.remote = remote;
+
+        self.newRoom(self.getDefaultRoomName());
     };
     
     webChat.prototype = {
@@ -14,8 +25,8 @@
             console.log(this);
         },
         
-        getDefaultRoomName: function() {
-            return RoomDefaultName;
+        getRemote: function() {
+            return this.remote;
         },
         
         getUsersList: function(roomName) {
@@ -42,13 +53,17 @@
             this.roomList[room_name].userList = list;
         },
         
+        getDefaultRoomName: function() {
+            return RoomDefaultName;
+        },
+        
         getRoomList: function() {
             return this.roomList;
         },
         
         newRoom: function(roomName) {
             var newRoom = {
-                name       : roomName,
+                name     : roomName,
                 userList : [this.remote],
                 owner    : this.remote
             };
@@ -59,28 +74,38 @@
             this.roomList = list;
         },
         
-        getRemote: function() {
-            return this.remote;
+        getRoom: function(roomName) {
+            var room = this.roomList.find(function (room) {
+                return room.name === roomName;
+            });
+            return room;
+        },
+        
+        getMessagesList: function() {
+            var room = this.getRoom(this.currentRoomName);
+            return room.messagesList;
+        },
+        
+        setMessagesList: function(messagesList) {
+            var room = this.getRoom(this.currentRoomName);
+            room.messagesList = messagesList;
+        },
+        
+        sendMessage: function(message) {
+            var messagesList = this.getMessagesList();
+            if (messagesList === undefined) {
+                messagesList = [];
+            }
+            messagesList.push(
+                {
+                    text: message,
+                    poster: this.getRemote()
+                }
+            );
+            this.setMessagesList(messagesList);
         }
         
     };
-    
-    var WebSocketsServer = "localhost";
-    var RoomDefaultName  = "Self";
-    
-    webChat.init = function(remote) {
-
-        var self = this;
-
-        self.version = '0.1';
-        
-        self.currentRoomName = RoomDefaultName;
-        self.roomList = [];
-        self.remote   = remote;
-        
-    };
-    
-    webChat.init.prototype = webChat.prototype;
     
     global.WC = global.webChat = webChat;
     
