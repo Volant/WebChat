@@ -1,20 +1,21 @@
 <!DOCTYPE html>
-<html ng-app="webChatApp">
+<html>
     <head>
     	<link rel="stylesheet" href="/css/bootstrap.min.css" />
+    	<link rel="stylesheet" href="/css/web-chat.css" />
     </head>
-    <body ng-controller="indexController">
+    <body>
         
-        <div id="main">
+        <div id="main" class="container" ng-app="webChatApp">
         
-            <div ng-view></div>
+            <div ui-view></div>
             
         </div>
         
     	<script src="/js/jquery-2.2.1.min.js"></script>
     	<script src="/js/bootstrap.min.js"></script>
         <script src="/js/angular.min.js"></script>
-        <script src="/js/angular-route.min.js"></script>
+        <script src="/js/angular-ui-router.js"></script>
         <script src="/js/index.js"></script>
         <script src="/js/web-chat.js"></script>
     </body>

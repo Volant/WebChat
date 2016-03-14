@@ -3,7 +3,7 @@
     'use strict';
     
     var WebSocketsServer = "localhost";
-    var RoomDefaultName  = "Self";
+    var RoomDefaultName  = "Web Chat";
     
     function webChat(remote) {
 
@@ -62,12 +62,20 @@
         },
         
         newRoom: function(roomName) {
+            if (!roomName) {
+                roomName = this.getDefaultRoomName();
+            }
             var newRoom = {
                 name     : roomName,
                 userList : [this.remote],
                 owner    : this.remote
             };
             this.roomList.push(newRoom);
+            this.currentRoomName = roomName;
+        },
+        
+        changeRoom: function(roomName) {
+            this.currentRoomName = roomName;
         },
         
         setRoomList: function(list) {

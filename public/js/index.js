@@ -1,16 +1,29 @@
-var webChatApp = angular.module('webChatApp', ['ngRoute']);
+var webChatApp = angular.module('webChatApp', ['ui.router']);
 
-webChatApp.config(function($routeProvider) {
-    $routeProvider
-    .when('/', {
-        templateUrl : 'pages/index.html',
-        controller  : 'indexController'
-    })
-    .when('/chat', {
-        templateUrl : 'pages/chat.html',
-        controller  : 'chatController'
-    });
-});
+webChatApp.config(['$urlRouterProvider', '$stateProvider',
+  function($urlRouterProvider, $stateProvider) {
+
+    $urlRouterProvider.otherwise('/');
+
+    $stateProvider
+      .state('login', {
+        url: '/',
+        templateUrl: "pages/index.html",
+        controller: 'indexController'
+      })
+      .state('chat', {
+        abstract: true,
+        url: '/chat',
+        template: '<div ui-view></div>',
+        controller: 'roomListCtrl'
+      })
+      .state('chat.roomlist', {
+        url: '/:roomName',
+        templateUrl: 'pages/chat.html',
+        controller: 'roomListCtrl'
+      })
+    }
+]);
 
 webChatApp.service('remote', function() {
     var remote = undefined;
@@ -29,24 +42,58 @@ webChatApp.service('remote', function() {
     };
 });
 
-webChatApp.controller('indexController', ['$scope', '$location', 'remote',
-    function ($scope, $location, remote) {
-        remote.setRemote('V');
+webChatApp.controller('roomListCtrl', ['$scope', 'remote', '$stateParams', '$state', '$http',
+  function ($scope, remote, $stateParams, $state, $http) {
+    
+    $scope.changeRoom = function(roomName) {
+//        this.wc.changeRoom(roomName);
+//        this.messagesList = this.wc.getMessagesList();
+      
+        $state.go("chat.roomlist", { roomName: roomName });
+    }
+
+    switch ($stateParams.roomName) {
+      case '1':
+        $scope.messagesList = [ { text: "AAAA" } ];
+        break;
+      case '2':
+        $scope.messagesList = [ {text: "CCCC" }, { text: "BBBBB" } ];
+        break;
+      default:
+        $scope.messagesList = [
+          { poster: "ME", text: 'no messages' },
+          { poster: "HE", text: "some message" }
+        ];
+        break;
+    }
+    
+    $http({
+      method: 'GET',
+      url: 'http://localhost/api/rooms'
+    }).then(function successCallback(response) {
+      $scope.roomsList = response.data.rooms;
+    }, function errorCallback(response) {
+      $scope.roomsList = [];
+    });
+  }
+]);
+
+webChatApp.controller('indexController', ['$scope', '$location', 'remote', '$state',
+    function ($scope, $location, remote, $state) {
+        remote.setRemote('Volant');
         if (remote.getRemote() === undefined) {
             $location.path("/");
         }
         
         $scope.login = function() {
             remote.setRemote(this.nick);
-            $location.path("/chat");
+            $state.go("chat.roomlist");
         }
     }
 ]);
 
-webChatApp.controller('chatController', [ '$scope', 'remote',
-    function ($scope, remote) {
-        
-        $scope.messagesList = [];
+webChatApp.controller('chatController', [ '$scope', '$location', 'remote', '$routeParams',
+    function ($scope, $location, remote, $routeParams) {
         
         $scope.wc = new WC(remote.getRemote());
         
@@ -55,6 +102,20 @@ webChatApp.controller('chatController', [ '$scope', 'remote',
             this.message = '';
             this.messagesList = this.wc.getMessagesList();
         }
+        
+        $scope.newRoom = function() {
+            this.wc.newRoom(this.roomName);
+            this.roomName = '';
+            this.roomsList = this.wc.getRoomList();
+            this.messagesList = this.wc.getMessagesList();
+        }
+        
+        $scope.changeRoom = function(roomName) {
+            this.wc.changeRoom(roomName);
+            this.messagesList = this.wc.getMessagesList();
+        }
+        
+        $scope.roomsList = $scope.wc.getRoomList();
     }
 ]);
 

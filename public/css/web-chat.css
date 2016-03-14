@@ -1,0 +1,7 @@
+a[ng-click] {
+    cursor: pointer;
+}
+
+a[ng-repeat] {
+    cursor: pointer;
+}

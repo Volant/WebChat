@@ -2,18 +2,32 @@
     <div class="row">
         <div class="col-xs-3">
             <div class="list-group">
-                <a href="#" class="list-group-item ">Room 1 <span class="badge">14</span></a>
-                <a href="#" class="list-group-item ">Room 2</a>
-                <a href="#" class="list-group-item ">Room 3</a>
-                <a href="#" class="list-group-item ">Room 4</a>
-            </div>
-        </div>
-        <div class="col-xs-8">
-            <div class="list-group">
-                <a href="#" class="list-group-item" ng-repeat="message in messagesList">
-                    {{message.text}}
+                <a class="list-group-item ">Room 1 <span class="badge">14</span></a> 
+                <a class="list-group-item" ng-repeat="room in roomsList">
+                    <div class="row">
+                      <div class="col-xs-12" ng-click="changeRoom(room.name)">{{room.name}}</div>
+                    </div>
                 </a>
             </div>
+            <div>
+                <form>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="newRoomName" ng-model="roomName" placeholder="New Room">
+                        <span class="input-group-btn">
+                            <button class="btn btn-success" ng-click="newRoom()">+</button>
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-xs-8">
+            <a href="#" class="list-group-item" ng-repeat="message in messagesList">
+                <div class="row">
+                    <div class="col-xs-2">poster:{{message.poster}}</div>
+                    <div class="col-xs-10">text:{{message.text}}</div>
+                </div>
+            </a>
             <form>
                 <div class="form-group">
                     <textarea class="form-control" rows="3" ng-model="message"></textarea>
@@ -23,3 +37,4 @@
         </div>
     </div>
 </div>
+
