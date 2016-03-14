@@ -14,8 +14,8 @@ webChatApp.config(['$urlRouterProvider', '$stateProvider',
       .state('chat', {
         abstract: true,
         url: '/chat',
-        template: '<div ui-view></div>',
-        controller: 'roomListCtrl'
+        template: '<div ui-view></div>'
+//        controller: 'roomListCtrl'
       })
       .state('chat.roomlist', {
         url: '/:roomName',
@@ -42,8 +42,57 @@ webChatApp.service('remote', function() {
     };
 });
 
-webChatApp.controller('roomListCtrl', ['$scope', 'remote', '$stateParams', '$state', '$http',
-  function ($scope, remote, $stateParams, $state, $http) {
+webChatApp.service('apiServer', ['$q',
+  function($q) {
+  var socket = new WebSocket("ws://localhost/api");
+  socket.onopen = function () {
+    console.log('connected');
+  };
+
+  var sendMessage = function(message, callback) {
+    var deferred = $q.defer();
+    waitForSocketConnected(socket, function() {
+      socket.send(message);
+    });
+    
+    socket.onmessage = function(message) {
+      if (message.data) {
+        deferred.resolve(message);
+      } else {
+        deferred.reject();
+      }
+    };
+    
+    return deferred.promise;
+  };
+  
+  return {
+    sendMessage: sendMessage
+  };
+  
+  function waitForSocketConnected(socket, callback) {
+    setTimeout(function() {
+      if (socket.readyState === 1) {
+        if (callback !== null) {
+          callback();
+        }
+        return;
+      } else {
+        console.log('connection lost');
+        waitForSocketConnected(socket, callback);
+      }
+    }, 0);
+  }
+}]);
+
+webChatApp.controller('roomListCtrl', ['$scope', 'remote', '$stateParams', '$state', 'apiServer',
+  function ($scope, remote, $stateParams, $state, apiServer) {
+    
+    $scope.wc = new WC(remote.getRemote());
+
+    apiServer.sendMessage("Hi").then(function(message) {
+      $scope.$parent.roomsList = JSON.parse(message.data);
+    });
     
     $scope.changeRoom = function(roomName) {
 //        this.wc.changeRoom(roomName);
@@ -67,14 +116,14 @@ webChatApp.controller('roomListCtrl', ['$scope', 'remote', '$stateParams', '$sta
         break;
     }
     
-    $http({
-      method: 'GET',
-      url: 'http://localhost/api/rooms'
-    }).then(function successCallback(response) {
-      $scope.roomsList = response.data.rooms;
-    }, function errorCallback(response) {
-      $scope.roomsList = [];
-    });
+//    $http({
+//      method: 'GET',
+//      url: 'http://localhost/api/rooms'
+//    }).then(function successCallback(response) {
+//      $scope.roomsList = response.data.rooms;
+//    }, function errorCallback(response) {
+//      $scope.roomsList = [];
+//    });
   }
 ]);
 

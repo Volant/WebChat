@@ -1,37 +1,34 @@
-var express = require('express');
-var webChatServer = express();
-var bodyParser = require('body-parser');
+/*jshint node:true */
+/*global require */
+/*global console */
 
-webChatServer.use(bodyParser.urlencoded( { extended: true } ));
-webChatServer.use(bodyParser.json());
+var wsServer = require("ws");
 
-var port = process.env.PORT || 8080;
+(function () {
+  "use strict";
 
-var roomsList = [];
+  var connections = {},
+    webSocketServer = new wsServer.Server({
+      port: 8080
+    });
+  
+  webSocketServer.on('connection', function (ws) {
+    console.log("connected");
+  
+    var id = Math.random();
+    connections[id] = ws;
+    
+    ws.on('message', function (message) {
+      console.log("got message " + message);
+      connections[id].send('[ { "name": "1" }, { "name": "2" }, { "name": "default" } ]');
+    });
 
-var router = express.Router();
-router.route('/rooms')
-  .get(function(req, res) {
-    res.json(
-      {
-        rooms: [ { name: '1' }, { name: '2' }, { name: 'default' } ]
-      }
-    )
-  })
-  .post(function(req, res) {
-    res.json(
-      {
-        message: 'add room'
-      }
-    );
-  })
-;
-
-webChatServer.use('/api', router);
-
-webChatServer.listen(port);
-
-console.log("Server started at " + port);
+    ws.on('close', function () {
+      console.log("disconnected");
+    });
+  });
+  
+}());
 
 /*
 var wsServer = require("ws");
@@ -64,3 +61,38 @@ webSocketServer.on('connection', function(ws) {
 
 });
 */
+
+//var express = require('express');
+//var webChatServer = express();
+//var bodyParser = require('body-parser');
+//
+//webChatServer.use(bodyParser.urlencoded( { extended: true } ));
+//webChatServer.use(bodyParser.json());
+//
+//var port = process.env.PORT || 8080;
+//
+//var roomsList = [];
+//
+//var router = express.Router();
+//router.route('/rooms')
+//  .get(function(req, res) {
+//    res.json(
+//      {
+//        rooms: [ { name: '1' }, { name: '2' }, { name: 'default' } ]
+//      }
+//    )
+//  })
+//  .post(function(req, res) {
+//    res.json(
+//      {
+//        message: 'add room'
+//      }
+//    );
+//  })
+//;
+//
+//webChatServer.use('/api', router);
+//
+//webChatServer.listen(port);
+//
+//console.log("Server started at " + port);
