@@ -4,7 +4,8 @@
   "description": "",
   "start": "node server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack public/js/index.js public/js/web-chat.js public/js/chat_bundle.js"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,23 @@
   "homepage": "https://github.com/Volant/WebChat",
   "dependencies": {
     "body-parser": "^1.15.0",
+    "eslint": "^2.7.0",
+    "eslint-config-airbnb": "^6.2.0",
+    "eslint-plugin-react": "^4.3.0",
     "express": "^4.13.4",
+    "ws": "^1.0.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.7.5",
+    "babel-core": "^6.7.6",
+    "babel-loader": "^6.2.4",
+    "babel-polyfill": "^6.7.4",
+    "babel-preset-es2015": "^6.6.0",
+    "eslint": "^2.7.0",
+    "eslint-config-airbnb": "^6.2.0",
+    "eslint-plugin-angular": "^1.0.0",
+    "eslint-plugin-react": "^4.3.0",
+    "webpack": "^1.12.14",
     "ws": "^1.0.1"
   }
 }

@@ -3,7 +3,7 @@
         <div class="col-xs-3">
             <div class="list-group">
                 <a class="list-group-item ">Room 1 <span class="badge">14</span></a> 
-                <a class="list-group-item" ng-repeat="room in roomsList">
+                <a class="list-group-item" ng-model="roomsList" ng-repeat="room in roomsList">
                     <div class="row">
                       <div class="col-xs-12" ng-click="changeRoom(room.name)">{{room.name}}</div>
                     </div>
