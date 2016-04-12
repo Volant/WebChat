@@ -2,83 +2,127 @@
 /* global require */
 /* global console */
 
-;(function WC () {
-  const wsServer = require('ws')
+(function WC() {
+  const wsServer = require('ws');
 
-  const connections = {}
+  const self = this;
   const webSocketServer = new wsServer.Server({
     port: 8090,
-    webChat: this,
-  })
+  });
 
-  function WebChat (webSocket) {
-    this.defaultRoom = 'Self'
-    this.roomsList = []
-    this.ws = webSocket
-
-    this.joinToRoom = function joinToRoom (roomName) {
-      const that = this
-
-      that.roomsList.push({ name: roomName })
-    }
-
-    this.joinToRoom(this.defaultRoom)
+  function WebChat() {
+    this.defaultRoom = 'Self';
+    this.roomsList = new Map();
+    this.connections = {};
   }
 
   WebChat.prototype = {
-    sendMessage: function sendMessage (message) {
-      this.ws.send(JSON.stringify(message))
+    getRoomsList: function getRoomsList(clientId) {
+      const roomsListRes = [];
+      this.roomsList.forEach((v, k) => {
+        if (!!~v.participants.indexOf(this.getRemote(clientId))) {
+          roomsListRes.push({ name: k });
+        }
+      });
+      return roomsListRes;
     },
 
-    handleMessage: function handleMessage (message) {
-      console.log(message)
+    joinToRoom: function joinToRoom(roomName, remoteUsername) {
+      if (!this.roomsList.has(roomName)) {
+        this.roomsList.set(roomName, {
+          participants: [remoteUsername],
+        });
+      } else {
+        this.roomsList.get(roomName).participants.push(remoteUsername);
+      }
+    },
+
+    setRemote: function setRemote(clientId, remoteUsername) {
+      Object.keys(this.connections).forEach((id) => {
+        if (parseFloat(id) !== clientId) {
+          if (this.connections[id].remoteUser === remoteUsername) {
+            this.connections[id].socket.close();
+            delete this.connections[id];
+          }
+        }
+      });
+
+      this.connections[clientId].remoteUser = remoteUsername;
+
+      // this should be done in 'register' function when DB is available
+      this.joinToRoom(this.defaultRoom, remoteUsername);
+    },
+
+    getRemote: function getRemote(clientId) {
+      return this.connections[clientId].remoteUser;
+    },
+
+    sendMessage: function sendMessage(clientId, message) {
+      this.connections[clientId].socket.send(JSON.stringify(message));
+    },
+
+    handleMessage: function handleMessage(clientId, message) {
+//      console.log(message);
       switch (message.cmd) {
         case 'getRoomsList':
-          this.sendMessage(
+          this.sendMessage(clientId,
             {
               cmd: 'getRoomsList',
-              roomsList: this.roomsList,
+              roomsList: this.getRoomsList(clientId),
             }
-          )
-          break
+          );
+          break;
         case 'getMessagesList':
-          this.sendMessage(
+          this.sendMessage(clientId,
             {
               cmd: 'getMessagesList',
               messagesList: [{ text: 'AAA' }, { text: 'BBB' }],
             }
-          )
-          break
+          );
+          break;
         case 'newMessage':
-          this.sendMessage(
+          this.sendMessage(clientId,
             {
               cmd: 'newMessage',
               result: 'OK',
             }
-          )
-          break
+          );
+          break;
+        case 'register':
+          this.setRemote(clientId, message.opts.remote);
+          this.sendMessage(clientId,
+            {
+              cmd: 'register',
+              result: 'OK',
+            }
+          );
+          break;
         default:
-          console.log('Unexpected command!')
-          break
+          console.log(`Unexpected command! ${message.cmd}`);
+          break;
       }
     },
-  }
+  };
 
   webSocketServer.on('connection', (ws) => {
-    const id = Math.random()
+    const clientId = Math.random();
 
-    connections[id] = new WebChat(ws)
+    self.WC.connections[clientId] = {};
+    self.WC.connections[clientId].socket = ws;
 
     ws.on('message', (message) => {
       try {
-        connections[id].handleMessage(JSON.parse(message))
+        self.WC.handleMessage(clientId, JSON.parse(message));
       } catch (e) {
-        console.log(e)
+        console.log(e);
       }
-    })
+    });
 
     ws.on('close', () => {
-      console.log('disconnected')
-    })
-  })
-}())
+      delete self.WC.connections[clientId];
+      console.log('disconnected');
+    });
+  });
+
+  global.WC = new WebChat();
+}());

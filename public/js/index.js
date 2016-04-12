@@ -39,14 +39,9 @@ angular.module('webChatApp', ['ui.router'])
   })
 
   .service('apiServer', [function apiServer() {
-    const socket = new WebSocket('ws://localhost/api');
     const that = this;
 
-    socket.onopen = function onopen() {
-      console.log('connected');
-    };
-
-    socket.onmessage = function onmessage(message) {
+    const handleMessageCallback = function handleMessageCallback(message) {
       let messageData = void 0;
 
       try {
@@ -73,33 +68,13 @@ angular.module('webChatApp', ['ui.router'])
       }
     };
 
-    function waitForSocketConnected(sock, callback) {
-      setTimeout(() => {
-        if (sock.readyState === 1) {
-          if (callback !== null) {
-            callback();
-          }
-          return;
-        }
-
-        if (sock.readyState !== 1) {
-          waitForSocketConnected(sock, callback);
-        }
-      }, 0);
-    }
-
     return {
       sendMessage: function sendMessage(message, options) {
-        waitForSocketConnected(socket, () => {
-          const messageToSend = {
-            cmd: message,
-            opts: options,
-          };
-          socket.send(JSON.stringify(messageToSend));
-        });
+        that.wc.sendWSMessage(message, options);
       },
-      setScope: function setScope(newScope) {
-        that.scope = newScope;
+      init: function init(opts) {
+        that.wc = new WC({ remote: opts.remote, onMessageCallback: handleMessageCallback });
+        that.scope = opts.scope;
       },
     };
   }])
@@ -108,9 +83,8 @@ angular.module('webChatApp', ['ui.router'])
   function roomListCtrl($scope, remote, $stateParams, $state, apiServer) {
     remote.setRemote('Volant');
 
-    apiServer.setScope($scope);
+    apiServer.init({ remote: remote.getRemote(), scope: $scope });
 
-    this.wc = new WC(remote.getRemote());
     apiServer.sendMessage('login', { userName: remote.getRemote() });
 
     this.changeRoom = function changeRoom(roomName) {

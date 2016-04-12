@@ -3,7 +3,7 @@
 (function webChatFunc() {
   const RoomDefaultName = 'Web Chat';
 
-  function webChat(remote) {
+  function webChat(opts) {
     const self = this;
 
     self.version = '0.1';
@@ -11,9 +11,34 @@
     self.currentRoomName = RoomDefaultName;
     self.roomList = [];
 
-    self.remote = remote;
+    self.remote = opts.remote;
 
     self.newRoom(self.getDefaultRoomName());
+
+    self.socket = new WebSocket('ws://localhost/api');
+
+    self.socket.onopen = function onopen() {
+      console.log('connected');
+    };
+
+    self.socket.onmessage = opts.onMessageCallback;
+
+    self.sendWSMessage('register', { remote: self.getRemote() });
+  }
+
+  function waitForSocketConnected(sock, callback) {
+    setTimeout(() => {
+      if (sock.readyState === 1) {
+        if (callback !== null) {
+          callback();
+        }
+        return;
+      }
+
+      if (sock.readyState !== 1) {
+        waitForSocketConnected(sock, callback);
+      }
+    }, 0);
   }
 
   webChat.prototype = {
@@ -107,6 +132,15 @@
       this.setMessagesList(messagesList);
     },
 
+    sendWSMessage(message, options) {
+      waitForSocketConnected(this.socket, () => {
+        const messageToSend = {
+          cmd: message,
+          opts: options,
+        };
+        this.socket.send(JSON.stringify(messageToSend));
+      });
+    },
   };
 
   window.WC = window.webChat = webChat;

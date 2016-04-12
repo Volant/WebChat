@@ -5,7 +5,7 @@
   "start": "node server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack public/js/index.js public/js/web-chat.js public/js/chat_bundle.js"
+    "build": "webpack --module-bind 'js=babel' public/js/web-chat.js public/js/index.js public/js/chat_bundle.js"
   },
   "repository": {
     "type": "git",
